@@ -1,17 +1,19 @@
 var express = require('express');
 var multer  = require('multer');
+var cors  = require('cors');
+var parser  = require('body-parser');
+var session  = require('express-session');
 var fs  = require('fs');
 
 var app = express();
-app.set('view engine', 'ejs');
+app.use(cors())
 
-app.get('/', (req, res) => {
-    res.render('index');
-});
+app.use(parser.json())
+app.use(session({ secret: 'some secrety secret' }))
 
 var storage = multer.diskStorage({
     destination: function (req, file, callback) {
-        var dir = './uploads';
+        const dir = './uploads';
         if (!fs.existsSync(dir)){
             fs.mkdirSync(dir);
         }
@@ -21,14 +23,15 @@ var storage = multer.diskStorage({
         callback(null, file.originalname);
     }
 });
+
 var upload = multer({storage: storage}).array('files', 12);
 app.post('/upload', function (req, res, next) {
     upload(req, res, function (err) {
         if (err) {
             return res.end("Something went wrong:(");
         }
-        res.end("Upload completed.");
+        res.end(JSON.stringify({ status: 'ok' }));
     });
 })
 
-app.listen(3000);
+app.listen(3001);
